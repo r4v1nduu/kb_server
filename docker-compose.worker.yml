@@ -1,0 +1,29 @@
+services:
+  worker:
+    build: ./worker
+    container_name: kb_sync_worker
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      - MONGODB_URI=mongodb://kb_mongodb:27017/emaildb?replicaSet=rs0
+      - ELASTICSEARCH_URL=http://kb_elasticsearch:9200
+      - NODE_ENV=production
+    networks:
+      - kb-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "node.*index.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
