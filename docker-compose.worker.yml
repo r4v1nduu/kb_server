@@ -3,13 +3,6 @@ services:
     build: ./worker
     container_name: kb_sync_worker
     restart: unless-stopped
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      mongo-init:
-        condition: service_completed_successfully
     environment:
       - MONGODB_URI=mongodb://kb_mongodb:27017/emaildb?replicaSet=rs0
       - ELASTICSEARCH_URL=http://kb_elasticsearch:9200
