@@ -24,3 +24,8 @@ services:
 
 volumes:
   mongodb_data:
+
+networks:
+  kb-network:
+    driver: bridge
+    internal: false

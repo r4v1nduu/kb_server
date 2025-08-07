@@ -28,3 +28,8 @@ services:
 
 volumes:
   elasticsearch_data:
+
+networks:
+  kb-network:
+    driver: bridge
+    internal: false

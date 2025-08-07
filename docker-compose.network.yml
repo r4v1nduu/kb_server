@@ -1,4 +1,0 @@
-networks:
-  kb-network:
-    driver: bridge
-    internal: false
