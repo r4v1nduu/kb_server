@@ -2,11 +2,10 @@
 
 ### Initial Setup (Without Backup DB)
 
-1. Create the network: `docker-compose -f docker-compose.network.yml up -d`
-2. Create Primary Database: `docker-compose -f docker-compose.db.yml up -d`
-3. Initialize Replica Set: `chmod +x init-replica.sh; ./init-replica.sh`
-4. Create Indexing Database: `docker-compose -f docker-compose.es.yml up -d`
-5. Start Worker: `docker-compose -f docker-compose.worker.yml up -d`
+1. Create Primary Database: `docker-compose -f docker-compose.db.yml up -d`
+2. Initialize Replica Set: `chmod +x init-replica.sh; ./init-replica.sh`
+3. Create Indexing Database: `docker-compose -f docker-compose.es.yml up -d`
+4. Start Worker: `docker-compose -f docker-compose.worker.yml up -d`
 
 **To Check the Connectivity:**
 
