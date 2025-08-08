@@ -17,11 +17,10 @@ class SyncService {
 
   private mapEmailToESPayload(email: IEmail): ElasticsearchEmailPayload {
     return {
-      product: email.product,
-      subject: email.subject,
-      body: email.body,
-      customer: email.customer,
-      date: email.date,
+      product: email.product, // ✅ Searchable
+      subject: email.subject, // ✅ Primary search field
+      body: email.body, // ✅ Main content search
+      // customer, date, createdAt, updatedAt stay only in MongoDB
     };
   }
 
@@ -48,7 +47,9 @@ class SyncService {
           break;
 
         default:
-          console.log(`[INFO] Unhandled operation type: ${change.operationType}`);
+          console.log(
+            `[INFO] Unhandled operation type: ${change.operationType}`
+          );
       }
     } catch (error) {
       console.error(`[BAD] Error syncing email ${documentId}:`, error);

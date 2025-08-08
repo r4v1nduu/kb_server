@@ -13,11 +13,11 @@ export interface IEmail {
 }
 
 export interface ElasticsearchEmailPayload {
-  product: string;
-  subject: string;
-  body: string;
-  customer?: string;
-  date?: Date;
+  product: string; // ✅ Index - used for search
+  subject: string; // ✅ Index - primary search field
+  body: string; // ✅ Index - main content search
+  // Note: customer, date, createdAt, updatedAt are NOT indexed
+  // They stay only in MongoDB for full content retrieval
 }
 
 export interface ChangeStreamDocument<T> {

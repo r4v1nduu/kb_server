@@ -41,21 +41,31 @@ class ElasticsearchService {
                 product: {
                   type: "text",
                   analyzer: "standard",
+                  // Optimized for direct search queries
+                  fields: {
+                    exact: { type: "keyword" }, // Exact matching
+                    stemmed: { type: "text", analyzer: "english" }, // Word variations
+                  },
                 },
                 subject: {
                   type: "text",
                   analyzer: "standard",
+                  // Subject is most important for search
+                  fields: {
+                    exact: { type: "keyword" },
+                    stemmed: { type: "text", analyzer: "english" },
+                  },
                 },
                 body: {
                   type: "text",
                   analyzer: "standard",
+                  // Body gets stemming for better matches
+                  fields: {
+                    stemmed: { type: "text", analyzer: "english" },
+                  },
                 },
-                customer: {
-                  type: "keyword",
-                },
-                date: {
-                  type: "date",
-                },
+                // Note: customer, date, createdAt, updatedAt are NOT indexed
+                // They remain only in MongoDB for full document retrieval
               },
             },
             settings: {
@@ -107,27 +117,81 @@ class ElasticsearchService {
     }
   }
 
-  async search(query: string, size: number = 50) {
+  async search(query: string, size: number = 50, from: number = 0) {
     try {
       const searchQuery = {
         index: this.indexName,
         size,
+        from,
         query: {
-          multi_match: {
-            query,
-            fields: ["product^2", "subject^3", "body"],
-            type: "best_fields",
-            fuzziness: "AUTO",
+          bool: {
+            should: [
+              // 1. Exact phrase match (highest priority)
+              {
+                multi_match: {
+                  query,
+                  fields: ["subject.exact^10", "product.exact^8"],
+                  type: "phrase",
+                  boost: 10,
+                },
+              },
+              // 2. Standard fuzzy search (main engine)
+              {
+                multi_match: {
+                  query,
+                  fields: ["subject^5", "product^3", "body^1"],
+                  type: "best_fields",
+                  fuzziness: "AUTO",
+                  prefix_length: 0, // Allow fuzzy from first character
+                  max_expansions: 50, // Balanced performance vs accuracy
+                  tie_breaker: 0.3, // Better multi-field scoring
+                },
+              },
+              // 3. Phrase matching (for multi-word queries)
+              {
+                multi_match: {
+                  query,
+                  fields: ["subject^3", "product^2", "body"],
+                  type: "phrase",
+                  boost: 3,
+                },
+              },
+              // 4. Stemmed search (for word variations like "run"/"running")
+              {
+                multi_match: {
+                  query,
+                  fields: [
+                    "subject.stemmed^2",
+                    "product.stemmed^1.5",
+                    "body.stemmed",
+                  ],
+                  type: "best_fields",
+                  fuzziness: "AUTO",
+                  boost: 2,
+                },
+              },
+            ],
+            minimum_should_match: 1,
           },
         },
         highlight: {
           fields: {
-            subject: {},
-            body: {},
+            subject: {
+              fragment_size: 200,
+              number_of_fragments: 1,
+            },
+            body: {
+              fragment_size: 200,
+              number_of_fragments: 2,
+            },
             product: {},
           },
+          pre_tags: ["<mark>"],
+          post_tags: ["</mark>"],
         },
-        sort: [{ date: { order: "desc" } }],
+        sort: [
+          "_score", // Sort by relevance only
+        ],
       };
 
       const response = await this.client.search(searchQuery);
