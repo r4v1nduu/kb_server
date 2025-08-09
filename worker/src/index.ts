@@ -1,4 +1,3 @@
-// @ts-nocheck
 import dotenv from "dotenv";
 import MongoDBService from "./mongodb";
 import ElasticsearchService from "./elasticsearch";
@@ -27,8 +26,8 @@ async function main() {
 
   try {
     // Initialize services
-    mongoService = new MongoDBService(MONGODB_URI);
-    esService = new ElasticsearchService(ELASTICSEARCH_URL);
+    mongoService = new MongoDBService(MONGODB_URI!);
+    esService = new ElasticsearchService(ELASTICSEARCH_URL!);
     syncService = new SyncService(esService, mongoService);
 
     // Connect to databases

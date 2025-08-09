@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ObjectId } from "mongodb";
 
 export interface IEmail {
