@@ -7,6 +7,7 @@ export interface IEmail {
   subject: string;
   body: string;
   date: Date;
+  submitted_by: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
