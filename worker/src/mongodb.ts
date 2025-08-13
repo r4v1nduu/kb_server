@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { MongoClient, Db, Collection, ChangeStream } from "mongodb";
 import { IEmail, ChangeStreamDocument } from "./types";
 
@@ -33,11 +32,6 @@ class MongoDBService {
       await this.emailCollection.createIndex({ product: 1 });
       await this.emailCollection.createIndex({ customer: 1 });
       await this.emailCollection.createIndex({ date: -1 });
-      await this.emailCollection.createIndex({
-        subject: "text",
-        body: "text",
-        product: "text",
-      });
       console.log("[INFO] MongoDB indexes created");
     } catch (error) {
       console.error("[BAD] Error creating MongoDB indexes:", error);

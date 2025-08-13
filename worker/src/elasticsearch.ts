@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Client } from "@elastic/elasticsearch";
 
 class ElasticsearchService {
@@ -33,6 +32,9 @@ class ElasticsearchService {
       });
 
       if (!exists) {
+        const replicaCount =
+          parseInt(process.env.ELASTICSEARCH_REPLICAS || "", 10) || 0;
+
         await this.client.indices.create({
           index: this.indexName,
           body: {
@@ -70,7 +72,7 @@ class ElasticsearchService {
             },
             settings: {
               number_of_shards: 1,
-              number_of_replicas: 0,
+              number_of_replicas: replicaCount,
             },
           },
         });
@@ -113,6 +115,45 @@ class ElasticsearchService {
         return;
       }
       console.error(`[BAD] Error deleting email ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async bulkIndexEmails(payloads: { id: string; document: any }[]) {
+    if (payloads.length === 0) {
+      return;
+    }
+
+    const body = payloads.flatMap((doc) => [
+      { index: { _index: this.indexName, _id: doc.id } },
+      doc.document,
+    ]);
+
+    try {
+      const response = await this.client.bulk({ refresh: true, body });
+
+      if (response.errors) {
+        const erroredDocuments: any[] = [];
+        // The items array contains the result of each operation in the bulk request
+        response.items.forEach((action: any, i: number) => {
+          const operation = Object.keys(action)[0];
+          if (action[operation].error) {
+            erroredDocuments.push({
+              // The errored document's ID is in the original payloads array
+              id: payloads[i].id,
+              // The error details are in the response
+              error: action[operation].error,
+            });
+          }
+        });
+        console.error("[BAD] Bulk indexing had errors:", erroredDocuments);
+      } else {
+        console.log(`[GOOD] Bulk indexed ${payloads.length} emails`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("[BAD] Error during bulk indexing:", error);
       throw error;
     }
   }

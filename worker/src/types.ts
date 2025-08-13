@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ObjectId } from "mongodb";
 
 export interface IEmail {
@@ -8,6 +7,7 @@ export interface IEmail {
   subject: string;
   body: string;
   date: Date;
+  submitted_by: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
